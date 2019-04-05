@@ -1,0 +1,22 @@
+read r1
+move r2 3
+add r0 r1 r2
+write r0
+sub r0 r1 r2
+write r0
+mul r0 r1 r2
+write r0
+div r0 r1 r2
+write r0
+mod r0 r1 r2
+write r0
+pot r0 r1 r2
+write r0
+and r0 r1 r2
+write r0
+or r0 r1 r2
+write r0
+not r0 r1
+write r0
+not r0 r2
+write r0

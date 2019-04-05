@@ -1,0 +1,14 @@
+leia x;
+leia y;
+z = x + y;
+escreva z;
+z = x - y;
+escreva z;
+z = x * y;
+escreva z;
+z = x / y;
+escreva z;
+z = x % y;
+escreva z;
+z = x ^ y;
+escreva z;
