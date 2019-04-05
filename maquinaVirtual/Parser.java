@@ -34,12 +34,12 @@ class Parser {
         n = 1;
       }
       else {
-        Mensagem.abort("Linha %d: Impossível determinar o número de operandos: %s", tokenOpcode.linha, opcode);
+        Mensagem.abort("Linha %d: Comando deve iniciar por operação: %s\n", tokenOpcode.linha, opcode);
       }
 
-      Mensagem.debug("Token %d de %d: %s com %d operandos", i, tokens.size(), opcode, n);
+      Mensagem.debug("Token %d de %d: %s com %d operandos\n", i, tokens.size(), opcode, n);
       if (i + n >= tokens.size()) {
-        Mensagem.abort("Linha %d: Falta operandos: %s", tokenOpcode.linha, opcode);
+        Mensagem.abort("Linha %d: Falta operandos: %s\n", tokenOpcode.linha, opcode);
       }
 
       String[] operandos = new String[n];
@@ -50,22 +50,22 @@ class Parser {
           if (!(j == 2
                 || (j == 1 && (MaquinaVirtual.keywordDesvio.contains(opcode) || opcode.matches("move|load|store")))
                 || (j == 0 && opcode.equals("jump")))) {
-            Mensagem.abort("Linha %d: Espera-se um registrador no %dº operando, número encontrado", op.linha, j + 1);
+            Mensagem.abort("Linha %d: Espera-se um registrador no %dº operando, número encontrado\n", op.linha, j + 1);
           }
         }
         else if (op.tipo == Token.Tipo.REG) {
           if (opcode.equals("jump") || (j == 2 && MaquinaVirtual.keywordDesvio.contains(opcode))) {
-            Mensagem.abort("Linha %d: Destino do desvio é um registrador", op.linha);
+            Mensagem.abort("Linha %d: Destino do desvio é um registrador\n", op.linha);
           }
         }
         else {
-          Mensagem.abort("Linha %d: %dº operando é inválido", op.linha, j + 1);
+          Mensagem.abort("Linha %d: %dº operando é inválido\n", op.linha, j + 1);
         }
       }
 
       list.add(new MaquinaVirtual.Instrucao(opcode, operandos));
       if (list.size() > MaquinaVirtual.MAX_INSTRUCOES) {
-        Mensagem.abort("Programa enorme!");
+        Mensagem.abort("Programa enorme!\n");
       }
 
       i += 1 + n;
@@ -93,7 +93,7 @@ class Parser {
     String opcode = instrucao.opcode;
     String[] operandos = instrucao.operandos;
 
-    Mensagem.debug("%s - %d operando(s)", instrucao, operandos.length);
+    Mensagem.debug("%s - %d operando(s)\n", instrucao, operandos.length);
     if (operandos.length == 1) {
       if (opcode.equals("jump")) {
         vm.jump(Integer.parseInt(operandos[0]));
@@ -111,7 +111,7 @@ class Parser {
         vm.write(vm.registrador(operandos[0]));
       }
       else {
-        Mensagem.abort("Que instrução é essa? '%s'", instrucao);
+        Mensagem.abort("Que instrução é essa? '%s'\n", instrucao);
       }
     }
     else if (operandos.length == 2) {
@@ -128,7 +128,7 @@ class Parser {
         vm.setaMemoria((int)buscaOperando(operandos[1]), vm.registrador(operandos[0]));
       }
       else {
-        Mensagem.abort("Que instrução é essa? '%s'", instrucao);
+        Mensagem.abort("Que instrução é essa? '%s'\n", instrucao);
       }
     }
     else if (operandos.length == 3) {
@@ -156,7 +156,7 @@ class Parser {
           result = op1 >= op2;
         }
         else {
-          Mensagem.abort("Que instrução é essa? '%s'", instrucao);
+          Mensagem.abort("Que instrução é essa? '%s'\n", instrucao);
         }
 
         if (result) {
@@ -178,13 +178,13 @@ class Parser {
         }
         else if (opcode.equals("div")) {
           if (op2 == 0) {
-            Mensagem.abort("Divisão por zero");
+            Mensagem.abort("Divisão por zero\n");
           }
           x = op1 / op2;
         }
         else if (opcode.equals("mod")) {
           if (op2 == 0) {
-            Mensagem.abort("Divisão por zero");
+            Mensagem.abort("Divisão por zero\n");
           }
           x = op1 % op2;
         }
@@ -198,14 +198,14 @@ class Parser {
           x = op1 | op2;
         }
         else {
-          Mensagem.abort("Que instrução é essa? '%s'", instrucao);
+          Mensagem.abort("Que instrução é essa? '%s'\n", instrucao);
         }
 
         vm.setaRegistrador(operandos[0], x);
       }
     }
     else {
-      Mensagem.abort("Que instrução é essa? '%s'", instrucao);
+      Mensagem.abort("Que instrução é essa? '%s'\n", instrucao);
     }
   }
 }

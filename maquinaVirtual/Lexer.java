@@ -29,12 +29,17 @@ class Lexer {
     if (codigo.fim()) {
       return null;
     }
-    if (!Character.isLetterOrDigit(codigo.get())) {
-      Mensagem.abort("Linha %d: Símbolo desconhecido: %c", codigo.linha(), codigo.get());
+    if (!Character.isLetterOrDigit(codigo.get()) && codigo.get() != '-') {
+      Mensagem.abort("Linha %d: Símbolo desconhecido: %c\n", codigo.linha(), codigo.get());
     }
 
     StringBuilder buf = new StringBuilder();
     boolean isNumber = true;
+    boolean sign = codigo.get() == '-';
+    if (sign) {
+      buf.append("-");
+      codigo.avanca();
+    }
     while (!codigo.fim() && Character.isLetterOrDigit(codigo.get())) {
       buf.append(codigo.get());
       isNumber &= Character.isDigit(codigo.get());
@@ -42,7 +47,10 @@ class Lexer {
     }
 
     String s = buf.toString();
-    Mensagem.debug("num? %s, '%s'", isNumber, s);
+    Mensagem.debug("'%s' é numero? %s\n", s, isNumber);
+    if (sign && !isNumber) {
+      Mensagem.abort("Linha %d: Espera-se um número após '-', encontrado: '%s'", codigo.linha(), s);
+    }
     if (isNumber) {
       return new Token(codigo.linha(), Token.Tipo.NUM, s);
     }
@@ -56,7 +64,7 @@ class Lexer {
       return new Token(codigo.linha(), Token.Tipo.OPR3, s);
     }
     if (!MaquinaVirtual.registradores.contains(s)) {
-      Mensagem.abort("Linha %d: Operação desconhecida: %s", codigo.linha(), s);
+      Mensagem.abort("Linha %d: Operação desconhecida: %s\n", codigo.linha(), s);
     }
     return new Token(codigo.linha(), Token.Tipo.REG, s);
   }

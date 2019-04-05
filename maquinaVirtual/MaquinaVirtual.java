@@ -98,21 +98,22 @@ public class MaquinaVirtual {
 
   void sigsegv(int x, int min, int max) {
     if (x < min || x > max) {
-      Mensagem.abort("Falha de segmentação");
+      Mensagem.abort("Falha de segmentação\n");
     }
   }
 
   long read() {
+    Mensagem.print(" > ");
     try {
       return input.nextLong();
     } catch (Exception e) {
-      Mensagem.abort("Erro inesperado durante leitura");
+      Mensagem.abort("Erro inesperado durante leitura\n");
       return 0;
     }
   }
 
   void write(long x) {
-    System.out.printf("%d\n", x);
+    Mensagem.print("%d\n", x);
   }
 
   void jump(int to) {
@@ -150,14 +151,20 @@ public class MaquinaVirtual {
     return pilha.pop();
   }
 
-  public MaquinaVirtual(String source) throws FileNotFoundException {
-    Codigo codigo = new Codigo(new Scanner(new InputStreamReader(new FileInputStream(source))));
+  public MaquinaVirtual(String source) {
+    Codigo codigo = null;
+    try {
+      codigo = new Codigo(new Scanner(new InputStreamReader(new FileInputStream(source))));
+    } catch (FileNotFoundException e) {
+      Mensagem.abort("Arquivo '%s' não encontrado\n", source);
+    }
+
     Lexer lexer = new Lexer(codigo);
     List<Token> tokens = lexer.leiaTokens();
     Mensagem.debug("%d tokens = %s", tokens.size(), tokens);
-    instrucoes = Parser.montaInstrucoes(tokens);
+
+    this.instrucoes = Parser.montaInstrucoes(tokens);
     Parser parser = new Parser(this);
     parser.programa();
-    Mensagem.debug("Bunitu");
   }
 }
