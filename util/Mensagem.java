@@ -1,5 +1,8 @@
 package util;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
+
 public class Mensagem {
   static public boolean printDebug = false;
 
@@ -29,12 +32,20 @@ public class Mensagem {
   }
 
   public static void abort() {
+    debug(true, printDebug, "Abortando.\n");
     System.exit(0);
   }
 
   public static void abort(String format, Object... out) {
-    debug(true, printDebug, "Abortando: ");
     debug(true, false, format, out);
     abort();
+  }
+
+  public static String getStackTrace(Exception exception) {
+    StringWriter writer = new StringWriter();
+    PrintWriter printWriter = new PrintWriter(writer);
+    exception.printStackTrace(printWriter);
+    printWriter.flush();
+    return writer.toString();
   }
 }

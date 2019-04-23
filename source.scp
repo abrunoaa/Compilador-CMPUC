@@ -1,22 +1,88 @@
-read r1
-move r2 3
+read r0
+store r0 0
+read r0
+store r0 1
+load r0 0
+push r0
+load r0 1
+push r0
+pop r2
+pop r1
 add r0 r1 r2
+push r0
+pop r0
+store r0 2
+load r0 2
+push r0
+pop r0
 write r0
+load r0 0
+push r0
+load r0 1
+push r0
+pop r2
+pop r1
 sub r0 r1 r2
+push r0
+pop r0
+store r0 2
+load r0 2
+push r0
+pop r0
 write r0
+load r0 0
+push r0
+load r0 1
+push r0
+pop r2
+pop r1
 mul r0 r1 r2
+push r0
+pop r0
+store r0 2
+load r0 2
+push r0
+pop r0
 write r0
+load r0 0
+push r0
+load r0 1
+push r0
+pop r2
+pop r1
 div r0 r1 r2
+push r0
+pop r0
+store r0 2
+load r0 2
+push r0
+pop r0
 write r0
+load r0 0
+push r0
+load r0 1
+push r0
+pop r2
+pop r1
 mod r0 r1 r2
+push r0
+pop r0
+store r0 2
+load r0 2
+push r0
+pop r0
 write r0
+load r0 0
+push r0
+load r0 1
+push r0
+pop r2
+pop r1
 pot r0 r1 r2
-write r0
-and r0 r1 r2
-write r0
-or r0 r1 r2
-write r0
-not r0 r1
-write r0
-not r0 r2
+push r0
+pop r0
+store r0 2
+load r0 2
+push r0
+pop r0
 write r0

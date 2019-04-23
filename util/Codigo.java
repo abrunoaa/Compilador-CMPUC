@@ -14,6 +14,8 @@ public class Codigo {
       codigo.append(in.nextLine());
       codigo.append('\n');
     }
+    this.linha = 1;
+    this.posicao = 0;
     this.codigo = codigo.toString();
   }
 

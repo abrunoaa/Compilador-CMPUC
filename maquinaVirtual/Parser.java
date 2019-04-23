@@ -46,6 +46,7 @@ class Parser {
       for (int j = 0; j < n; ++j) {
         Token op = tokens.get(i + j + 1);
         operandos[j] = op.valor;
+        Mensagem.debug("%s\n", op);
         if (op.tipo == Token.Tipo.NUM) {
           if (!(j == 2
                 || (j == 1 && (MaquinaVirtual.keywordDesvio.contains(opcode) || opcode.matches("move|load|store")))

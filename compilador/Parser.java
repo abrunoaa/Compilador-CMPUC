@@ -33,7 +33,7 @@ class Parser {
     return tokens.get(k);
   }
 
-  // escreva no arquivo
+  // escreve o comando no arquivo
   private void escreva(String format, Object... out) {
     System.out.printf(format + "\n", out);
   }
@@ -41,7 +41,7 @@ class Parser {
   private void escrevaOperacao(String op) {
     System.out.println("pop r2");
     System.out.println("pop r1");
-    System.out.println("%s r0 r1 r2");
+    System.out.printf("%s r0 r1 r2\n", op);
     System.out.println("push r0");
   }
 
@@ -59,26 +59,27 @@ class Parser {
 
   // <listaDeIntrucoes> -> <instrucao>; <listaDeIntrucoes> | E
   private void listaDeIntrucoes(int index) {
-    Mensagem.debug("Instrução %d. Total %d.\n", index, tokens.size());
+    Mensagem.debug("Instrução %d. Total %d.\n", index+1, tokens.size());
     if (index < tokens.size()) {
       int k = instrucao(index);
+      Mensagem.debug("k = %d, total = %d\n", k, tokens.size());
       if (k != -1) {
         if (!get(k + 1).valor.equals(";")) {
           Mensagem.debug("Token = %s\n", get(k + 1));
-          Mensagem.abort("Espera-se um ';' após uma instrução");
+          Mensagem.abort("Espera-se um ';' após uma instrução\n");
         }
         listaDeIntrucoes(k + 2);
         return;
       }
       Mensagem.debug("Token %d\n", index);
-      Mensagem.abort("Seu código tá errado ;)");
+      Mensagem.abort("Seu código tá errado ;)\n");
     }
   }
 
   // <instrucao> -> { <atribuicao> | escreva <expressao> | funcLeia ID }
   private int instrucao(int index) {
     if (get(index).tipo != Token.Tipo.ID) {
-      Mensagem.abort("Espera-se um identificador no início da instrução");
+      Mensagem.abort("Espera-se um identificador no início da instrução\n");
     }
 
     Mensagem.debug("instrucao %d: %s\n", index, get(index));
@@ -103,13 +104,13 @@ class Parser {
 
   // <funcLeia> -> funcLeia ID
   private int funcLeia(int index) {
-    assert get(index).valor.equals("funcLeia");
+    assert get(index).valor.equals("leia");
     Token var = get(index + 1);
     if (var.tipo != Token.Tipo.ID) {
-      Mensagem.abort("Espera-se um identificador após 'funcLeia'");
+      Mensagem.abort("Espera-se um identificador após 'leia'\n");
     }
     escreva("read r0");
-    escreva("store %d r0", posVariavel(var.valor));
+    escreva("store r0 %d", posVariavel(var.valor));
     Mensagem.debug("%s = %d\n", var.valor, variaveis.get(var.valor));
     return index + 1;
   }
@@ -118,7 +119,7 @@ class Parser {
   private int id(int index) {
     Mensagem.debug("id = %s\n", get(index));
     if (get(index).tipo == Token.Tipo.ID) {
-      escreva("load %d r0", posVariavel(get(index).valor));
+      escreva("load r0 %d", posVariavel(get(index).valor));
       escreva("push r0");
     }
     else if (get(index).tipo == Token.Tipo.NUM) {
@@ -136,14 +137,14 @@ class Parser {
   private int atribuicao(int index) {
     Mensagem.debug("atribuicao %s", get(index));
     if (get(index).tipo != Token.Tipo.ID) {
-      Mensagem.abort("Espera-se um identificador no início da expressão");
+      Mensagem.abort("Espera-se um identificador no início da expressão\n");
     }
     if (get(index + 1).tipo != Token.Tipo.ATRIB) {
-      Mensagem.abort("Espera-se uma atribuição '=' após o identificador");
+      Mensagem.abort("Espera-se uma atribuição '=' após o identificador\n");
     }
     int k = expressao(index + 2);
     escreva("pop r0");
-    escreva("store %d r0", variaveis.get(get(index).valor));
+    escreva("store r0 %d", posVariavel(get(index).valor));
     return k;
   }
 
@@ -171,12 +172,12 @@ class Parser {
       int k = expressao(index + 1);
       assert k != -1 : "num vai da nao";
       if (get(k + 1).tipo != Token.Tipo.DELIM || !get(k + 1).valor.equals(")")) {
-        Mensagem.abort("Espera-se um ')' na expressão");
+        Mensagem.abort("Espera-se um ')' na expressão\n");
       }
       return resto3(k + 2);
     }
     if (get(index).tipo != Token.Tipo.ID && get(index).tipo != Token.Tipo.NUM) {
-      Mensagem.abort("Espera-se uma expressão, número ou variável");
+      Mensagem.abort("Espera-se uma expressão, número ou variável\n");
     }
     int k = id(index);
     assert k != -1 : "num vai da nao";
@@ -215,13 +216,13 @@ class Parser {
         k = expressao(index + 2);
         assert k != -1 : "num vai da nao";
         if (get(k + 1).equals(")")) {
-          Mensagem.abort("Espera-se um ')' na expressão");
+          Mensagem.abort("Espera-se um ')' na expressão\n");
         }
         ++k;
       }
       else {
         if (get(index + 1).tipo != Token.Tipo.ID && get(index + 1).tipo != Token.Tipo.NUM) {
-          Mensagem.abort("Espera-se uma expressão, número ou variável após '^'");
+          Mensagem.abort("Espera-se uma expressão, número ou variável após '^'\n");
         }
         k = id(index + 1);
         assert k != -1 : "num vai da nao";

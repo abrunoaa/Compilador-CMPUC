@@ -47,7 +47,7 @@ class Lexer {
     }
 
     String s = buf.toString();
-    Mensagem.debug("'%s' é numero? %s\n", s, isNumber);
+    // Mensagem.debug("'%s' é numero? %s\n", s, isNumber);
     if (sign && !isNumber) {
       Mensagem.abort("Linha %d: Espera-se um número após '-', encontrado: '%s'", codigo.linha(), s);
     }
