@@ -1,12 +1,11 @@
 package maquinaVirtual;
 
+import util.Codigo;
+import util.Mensagem;
 import maquinaVirtual.MaquinaVirtual;
 import maquinaVirtual.Token;
-import util.Codigo;
 import maquinaVirtual.Lexer;
 import maquinaVirtual.Parser;
-
-import util.Mensagem;
 
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
