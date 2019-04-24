@@ -13,15 +13,17 @@ import java.util.HashMap;
 import java.util.Scanner;
 
 class Parser {
-  static final public long MAX_EXPOENTE = 10;
-
-  private Scanner input;
+  // posição de memória das variáveis
   private Map<String,Integer> variaveis;
+  
+  // tokens do código
   private List<Token> tokens;
+  
+  // token sendo processado
+  int posicao;
 
   public Parser(List<Token> tokens) {
     assert tokens != null : "Unexpected null";
-    this.input = new Scanner(System.in);
     this.variaveis = new HashMap<String,Integer>();
     this.tokens = tokens;
   }
@@ -54,182 +56,152 @@ class Parser {
 
   // <programa> -> <listaDeIntrucoes>
   public void programa() {
-    listaDeIntrucoes(0);
+    listaDeIntrucoes();
   }
 
   // <listaDeIntrucoes> -> <instrucao>; <listaDeIntrucoes> | E
-  private void listaDeIntrucoes(int index) {
-    Mensagem.debug("Instrução %d. Total %d.\n", index+1, tokens.size());
-    if (index < tokens.size()) {
-      int k = instrucao(index);
-      Mensagem.debug("k = %d, total = %d\n", k, tokens.size());
-      if (k != -1) {
-        if (!get(k + 1).valor.equals(";")) {
-          Mensagem.debug("Token = %s\n", get(k + 1));
-          Mensagem.abort("Espera-se um ';' após uma instrução\n");
-        }
-        listaDeIntrucoes(k + 2);
-        return;
+  private void listaDeIntrucoes() {
+    if (posicao < tokens.size()) {
+      instrucao();
+      if (get(posicao).tipo != Token.Tipo.DELIM || !get(posicao).valor.equals(";")) {
+        Mensagem.abort("Espera-se um ';' após uma instrução\n");
       }
-      Mensagem.debug("Token %d\n", index);
-      Mensagem.abort("Seu código tá errado ;)\n");
+      ++posicao;
+      listaDeIntrucoes();
     }
   }
 
-  // <instrucao> -> { <atribuicao> | escreva <expressao> | funcLeia ID }
-  private int instrucao(int index) {
-    if (get(index).tipo != Token.Tipo.ID) {
+  // <instrucao> -> { <atribuicao> | escreva <expressao> | leia ID }
+  private void instrucao() {
+    if (get(posicao).tipo != Token.Tipo.ID) {
       Mensagem.abort("Espera-se um identificador no início da instrução\n");
     }
-
-    Mensagem.debug("instrucao %d: %s\n", index, get(index));
-    if (get(index).valor.equals("escreva")) {
-      return funcEscreva(index);
+    if (get(posicao).valor.equals("escreva")) {
+      ++posicao;
+      expressao();
+      escreva("pop r0");
+      escreva("write r0");
     }
-    if (get(index).valor.equals("leia")) {
-      return funcLeia(index);
+    else if (get(posicao).valor.equals("leia")) {
+      ++posicao;
+      Token var = get(posicao);
+      if (var.tipo != Token.Tipo.ID) {
+        Mensagem.abort("Espera-se um identificador após 'leia'\n");
+      }
+      id();
+      escreva("read r0");
+      escreva("store r0 %d", posVariavel(var.valor));
     }
-    return atribuicao(index);
-  }
-
-  // <funcEscreva> -> funcEscreva <expressao>
-  private int funcEscreva(int index) {
-    assert get(index).valor.equals("escreva");
-    int k = expressao(index + 1);
-    assert k != -1 : "expressao: return = -1";
-    escreva("pop r0");
-    escreva("write r0");
-    return k;
-  }
-
-  // <funcLeia> -> funcLeia ID
-  private int funcLeia(int index) {
-    assert get(index).valor.equals("leia");
-    Token var = get(index + 1);
-    if (var.tipo != Token.Tipo.ID) {
-      Mensagem.abort("Espera-se um identificador após 'leia'\n");
+    else {
+      atribuicao(index);
     }
-    escreva("read r0");
-    escreva("store r0 %d", posVariavel(var.valor));
-    Mensagem.debug("%s = %d\n", var.valor, variaveis.get(var.valor));
-    return index + 1;
   }
 
   // <id> -> ID | NUM
-  private int id(int index) {
-    Mensagem.debug("id = %s\n", get(index));
-    if (get(index).tipo == Token.Tipo.ID) {
-      escreva("load r0 %d", posVariavel(get(index).valor));
+  private void id() {
+    if (get(posicao).tipo == Token.Tipo.ID) {
+      escreva("load r0 %d", posVariavel(get(posicao).valor));
       escreva("push r0");
     }
-    else if (get(index).tipo == Token.Tipo.NUM) {
-      escreva("move r0 %d", Long.valueOf(get(index).valor));
+    else if (get(posicao).tipo == Token.Tipo.NUM) {
+      escreva("move r0 %d", Long.valueOf(get(posicao).valor));
       escreva("push r0");
     }
     else {
       assert false : "id chamado com um não id";
     }
-    Mensagem.debug("ok\n");
-    return index;
+    ++posicao;
   }
 
   // <atribuicao> -> ID = <expressao>
-  private int atribuicao(int index) {
-    Mensagem.debug("atribuicao %s", get(index));
-    if (get(index).tipo != Token.Tipo.ID) {
+  private void atribuicao() {
+    int posVar = posVariavel(get(posicao).valor);
+    if (get(posicao).tipo != Token.Tipo.ID) {
       Mensagem.abort("Espera-se um identificador no início da expressão\n");
     }
-    if (get(index + 1).tipo != Token.Tipo.ATRIB) {
+    if (get(posicao + 1).tipo != Token.Tipo.ATRIB) {
       Mensagem.abort("Espera-se uma atribuição '=' após o identificador\n");
     }
-    int k = expressao(index + 2);
+    posicao += 2;
+    expressao();
     escreva("pop r0");
-    escreva("store r0 %d", posVariavel(get(index).valor));
-    return k;
+    escreva("store r0 %d", posVar);
   }
 
   // <expressao> -> <termo> <resto1>
   private int expressao(int index) {
-    Mensagem.debug("Verificando termo...\n");
-    int k = termo(index);
-    Mensagem.debug("Termo ok\n");
-    assert k != -1 : "num vai da nao";
-    return resto1(k + 1);
+    termo();
+    resto1();
   }
 
   // <termo> -> <fator> <resto2>
-  private int termo(int index) {
-    Mensagem.debug("Verificando fator...\n");
-    int k = fator(index);
-    Mensagem.debug("Fator ok\n");
-    assert k != -1 : "num vai da nao";
-    return resto2(k + 1);
+  private void termo() {
+    fator();
+    resto2();
   }
 
   // <fator> -> (<expressao>) <resto3> | <id> <resto3>
-  private int fator(int index) {
-    if (get(index).tipo == Token.Tipo.DELIM && get(index).valor.equals("(")) {
-      int k = expressao(index + 1);
-      assert k != -1 : "num vai da nao";
-      if (get(k + 1).tipo != Token.Tipo.DELIM || !get(k + 1).valor.equals(")")) {
+  private void fator() {
+    Token t = get(posicao);
+    if (t.tipo == Token.Tipo.DELIM && t.valor.equals("(")) {
+      ++posicao;
+      expressao();
+      if (get(posicao).tipo != Token.Tipo.DELIM || !get(posicao).valor.equals(")")) {
         Mensagem.abort("Espera-se um ')' na expressão\n");
       }
-      return resto3(k + 2);
+      ++posicao;
+      resto3();
     }
-    if (get(index).tipo != Token.Tipo.ID && get(index).tipo != Token.Tipo.NUM) {
-      Mensagem.abort("Espera-se uma expressão, número ou variável\n");
+    else{
+      if (t.tipo != Token.Tipo.ID && t.tipo != Token.Tipo.NUM) {
+        Mensagem.abort("Espera-se uma expressão, número ou variável\n");
+      }
+      id();
+      resto3();
     }
-    int k = id(index);
-    assert k != -1 : "num vai da nao";
-    return resto3(k + 1);
   }
 
-  // <resto1> -> + <termo> | - <termo> | E
-  private int resto1(int index) {
+  // <resto1> -> + <termo> <resto1> | - <termo> <resto1> | E
+  private void resto1() {
     Token t = get(index);
     if (t.tipo == Token.Tipo.OPR_AR && Arrays.asList("+", "-").contains(t.valor)) {
-      int k = termo(index + 1);
-      assert k != -1 : "num vai da nao";
+      ++posicao;
+      termo();
       escrevaOperacao(t.valor.equals("+") ? "add" : "sub");
-      return resto1(k + 1);
+      resto1();
     }
-    return index - 1; // epsilon
   }
 
   // <resto2> -> * <fator> <resto2> | / <fator> <resto2> | % <fator> <resto2> | E
-  private int resto2(int index) {
-    Token t = get(index);
+  private void resto2() {
+    Token t = get(posicao);
     if (t.tipo == Token.Tipo.OPR_AR && Arrays.asList("*", "/", "%").contains(t.valor)) {
-      int k = fator(index + 1);
-      assert k != -1 : "num vai da nao";
+      ++posicao;
+      fator();
       escrevaOperacao(t.valor.equals("*") ? "mul" : t.valor.equals("/") ? "div" : "mod");
-      return resto2(k + 1);
+      resto2();
     }
-    return index - 1; // epsilon
   }
 
   // <resto3> -> ^ (<expressao>) | ^ <id> | E
-  private int resto3(int index) {
-    if (get(index).tipo == Token.Tipo.OPR_AR && get(index).valor.equals("^")) {
-      int k;
-      if (get(index + 1).tipo == Token.Tipo.DELIM && get(index + 1).valor.equals("(")) {
-        k = expressao(index + 2);
-        assert k != -1 : "num vai da nao";
-        if (get(k + 1).equals(")")) {
+  private void resto3() {
+    if (get(posicao).tipo == Token.Tipo.OPR_AR && get(posicao).valor.equals("^")) {
+      ++posicao;
+      if (get(posicao).tipo == Token.Tipo.DELIM && get(posicao).valor.equals("(")) {
+        ++posicao;
+        expressao();
+        if (!get(posicao).equals(")")) {
           Mensagem.abort("Espera-se um ')' na expressão\n");
         }
-        ++k;
+        ++posicao;
       }
       else {
-        if (get(index + 1).tipo != Token.Tipo.ID && get(index + 1).tipo != Token.Tipo.NUM) {
-          Mensagem.abort("Espera-se uma expressão, número ou variável após '^'\n");
+        if (get(posicao).tipo != Token.Tipo.ID && get(posicao).tipo != Token.Tipo.NUM) {
+          Mensagem.abort("Espera-se uma expressão, número ou variável após o operador '^'\n");
         }
-        k = id(index + 1);
-        assert k != -1 : "num vai da nao";
+        id();
       }
       escrevaOperacao("pot");
-      return k;
     }
-    return index - 1; // epsilon
   }
 }
