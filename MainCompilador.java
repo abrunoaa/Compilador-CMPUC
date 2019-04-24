@@ -8,7 +8,7 @@ import java.io.FileNotFoundException;
 
 class MainCompilador {
   public static void main(String[] args) {
-    Mensagem.printDebug = true;
+    Mensagem.printDebug = false;
     String fonte = "source.cmp";
     String dest = "source.scp";
     try {

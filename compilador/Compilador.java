@@ -27,6 +27,6 @@ public class Compilador {
     Mensagem.debug("%d Tokens = %s\n", tokens.size(), tokens);
 
     Parser parser = new Parser(tokens);
-    parser.programa();
+    String assembly = parser.geraAssembly();
   }
 }

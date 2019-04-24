@@ -3,8 +3,8 @@ package compilador;
 class Token {
   public enum Tipo { ATRIB, OPR_AR, DELIM, ID, NUM, ERRO, FIM }
 
-  final public static Token TOKEN_FINAL = new Token(Tipo.FIM, "fim");
-  
+  final public static Token TOKEN_FINAL = new Token(-1, Tipo.FIM, "fim");
+
   final public int linha;
   final public Tipo tipo;
   final public String valor;

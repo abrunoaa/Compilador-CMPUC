@@ -4,6 +4,8 @@ import compilador.Token;
 
 import util.Mensagem;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.Iterator;
 import java.util.Arrays;
 import java.util.List;
@@ -14,18 +16,27 @@ import java.util.Scanner;
 
 class Parser {
   // posição de memória das variáveis
-  private Map<String,Integer> variaveis;
-  
+  private Map<String,Integer> variaveis = new HashMap<String,Integer>();
+
   // tokens do código
   private List<Token> tokens;
-  
+
   // token sendo processado
-  int posicao;
+  private int posicao;
+
+  // código em assembly
+  private StringWriter writer = new StringWriter();
+  private PrintWriter printWriter = new PrintWriter(writer);
 
   public Parser(List<Token> tokens) {
-    assert tokens != null : "Unexpected null";
-    this.variaveis = new HashMap<String,Integer>();
+    assert tokens != null;
     this.tokens = tokens;
+  }
+
+  public String geraAssembly() {
+    programa();
+    printWriter.flush();
+    return printWriter.toString();
   }
 
   private Token get(int k) {
@@ -35,16 +46,16 @@ class Parser {
     return tokens.get(k);
   }
 
-  // escreve o comando no arquivo
-  private void escreva(String format, Object... out) {
-    System.out.printf(format + "\n", out);
+  // escreve a instrução no arquivo
+  private void instrucao(String format, Object... out) {
+    printWriter.printf(format + "\n", out);
   }
 
-  private void escrevaOperacao(String op) {
-    System.out.println("pop r2");
-    System.out.println("pop r1");
-    System.out.printf("%s r0 r1 r2\n", op);
-    System.out.println("push r0");
+  private void instrucaoOperacao(String op) {
+    printWriter.println("pop r2");
+    printWriter.println("pop r1");
+    printWriter.printf("%s r0 r1 r2\n", op);
+    printWriter.println("push r0");
   }
 
   private int posVariavel(String var) {
@@ -55,7 +66,7 @@ class Parser {
   }
 
   // <programa> -> <listaDeIntrucoes>
-  public void programa() {
+  private void programa() {
     listaDeIntrucoes();
   }
 
@@ -71,16 +82,16 @@ class Parser {
     }
   }
 
-  // <instrucao> -> { <atribuicao> | escreva <expressao> | leia ID }
+  // <instrucao> -> { <atribuicao> | instrucao <expressao> | leia ID }
   private void instrucao() {
     if (get(posicao).tipo != Token.Tipo.ID) {
       Mensagem.abort("Espera-se um identificador no início da instrução\n");
     }
-    if (get(posicao).valor.equals("escreva")) {
+    if (get(posicao).valor.equals("instrucao")) {
       ++posicao;
       expressao();
-      escreva("pop r0");
-      escreva("write r0");
+      instrucao("pop r0");
+      instrucao("write r0");
     }
     else if (get(posicao).valor.equals("leia")) {
       ++posicao;
@@ -89,23 +100,23 @@ class Parser {
         Mensagem.abort("Espera-se um identificador após 'leia'\n");
       }
       id();
-      escreva("read r0");
-      escreva("store r0 %d", posVariavel(var.valor));
+      instrucao("read r0");
+      instrucao("store r0 %d", posVariavel(var.valor));
     }
     else {
-      atribuicao(index);
+      atribuicao();
     }
   }
 
   // <id> -> ID | NUM
   private void id() {
     if (get(posicao).tipo == Token.Tipo.ID) {
-      escreva("load r0 %d", posVariavel(get(posicao).valor));
-      escreva("push r0");
+      instrucao("load r0 %d", posVariavel(get(posicao).valor));
+      instrucao("push r0");
     }
     else if (get(posicao).tipo == Token.Tipo.NUM) {
-      escreva("move r0 %d", Long.valueOf(get(posicao).valor));
-      escreva("push r0");
+      instrucao("move r0 %d", Long.valueOf(get(posicao).valor));
+      instrucao("push r0");
     }
     else {
       assert false : "id chamado com um não id";
@@ -124,12 +135,12 @@ class Parser {
     }
     posicao += 2;
     expressao();
-    escreva("pop r0");
-    escreva("store r0 %d", posVar);
+    instrucao("pop r0");
+    instrucao("store r0 %d", posVar);
   }
 
   // <expressao> -> <termo> <resto1>
-  private int expressao(int index) {
+  private void expressao() {
     termo();
     resto1();
   }
@@ -163,11 +174,11 @@ class Parser {
 
   // <resto1> -> + <termo> <resto1> | - <termo> <resto1> | E
   private void resto1() {
-    Token t = get(index);
+    Token t = get(posicao);
     if (t.tipo == Token.Tipo.OPR_AR && Arrays.asList("+", "-").contains(t.valor)) {
       ++posicao;
       termo();
-      escrevaOperacao(t.valor.equals("+") ? "add" : "sub");
+      instrucaoOperacao(t.valor.equals("+") ? "add" : "sub");
       resto1();
     }
   }
@@ -178,7 +189,7 @@ class Parser {
     if (t.tipo == Token.Tipo.OPR_AR && Arrays.asList("*", "/", "%").contains(t.valor)) {
       ++posicao;
       fator();
-      escrevaOperacao(t.valor.equals("*") ? "mul" : t.valor.equals("/") ? "div" : "mod");
+      instrucaoOperacao(t.valor.equals("*") ? "mul" : t.valor.equals("/") ? "div" : "mod");
       resto2();
     }
   }
@@ -201,7 +212,7 @@ class Parser {
         }
         id();
       }
-      escrevaOperacao("pot");
+      instrucaoOperacao("pot");
     }
   }
 }

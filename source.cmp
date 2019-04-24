@@ -1,5 +1,5 @@
 leia x;
-leia y;
+leia y
 z = x + y;
 escreva z;
 z = x - y;
