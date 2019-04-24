@@ -24,22 +24,22 @@ class Lexer {
     keyword = new HashMap<String, Token>();
 
     // OPR_AR
-    simbolo.put('+', new Token(Token.Tipo.OPR_AR, "+"));
-    simbolo.put('*', new Token(Token.Tipo.OPR_AR, "*"));
-    simbolo.put('/', new Token(Token.Tipo.OPR_AR, "/"));
-    simbolo.put('%', new Token(Token.Tipo.OPR_AR, "%"));
-    simbolo.put('^', new Token(Token.Tipo.OPR_AR, "^"));
+    simbolo.put('+', new Token(-1, Token.Tipo.OPR_AR, "+"));
+    simbolo.put('*', new Token(-1, Token.Tipo.OPR_AR, "*"));
+    simbolo.put('/', new Token(-1, Token.Tipo.OPR_AR, "/"));
+    simbolo.put('%', new Token(-1, Token.Tipo.OPR_AR, "%"));
+    simbolo.put('^', new Token(-1, Token.Tipo.OPR_AR, "^"));
 
-    simbolo.put('=', new Token(Token.Tipo.ATRIB, "="));
+    simbolo.put('=', new Token(-1, Token.Tipo.ATRIB, "="));
 
     // DELIM
-    simbolo.put('(', new Token(Token.Tipo.DELIM, "("));
-    simbolo.put(')', new Token(Token.Tipo.DELIM, ")"));
-    simbolo.put(';', new Token(Token.Tipo.DELIM, ";"));
+    simbolo.put('(', new Token(-1, Token.Tipo.DELIM, "("));
+    simbolo.put(')', new Token(-1, Token.Tipo.DELIM, ")"));
+    simbolo.put(';', new Token(-1, Token.Tipo.DELIM, ";"));
 
     // keywords
-    keyword.put("escreva", new Token(Token.Tipo.ID, "escreva"));
-    keyword.put("leia", new Token(Token.Tipo.ID, "leia"));
+    keyword.put("escreva", new Token(-1, Token.Tipo.ID, "escreva"));
+    keyword.put("leia", new Token(-1, Token.Tipo.ID, "leia"));
   }
 
   private Codigo codigo;
@@ -52,24 +52,24 @@ class Lexer {
   }
 
   // cria um token, atualizando o valor de 'temOperando'
-  private Token criaToken(Token token) {
+  private Token criaToken(int linha, Token token) {
     temOperando = token.tipo == Token.Tipo.ID || token.tipo == Token.Tipo.NUM;
-    return token;
+    return new Token(linha, token.tipo, token.valor);
   }
 
-  private Token criaToken(Token.Tipo tipo) {
+  private Token criaToken(int linha, Token.Tipo tipo) {
     temOperando = tipo == Token.Tipo.ID || tipo == Token.Tipo.NUM;
-    return new Token(tipo);
+    return new Token(linha, tipo);
   }
 
-  private Token criaToken(Token.Tipo tipo, String valor) {
+  private Token criaToken(int linha, Token.Tipo tipo, String valor) {
     temOperando = tipo == Token.Tipo.ID || tipo == Token.Tipo.NUM;
-    return new Token(tipo, valor);
+    return new Token(linha, tipo, valor);
   }
 
-  private Token criaErro(String valor) {
+  private Token criaErro(int linha, String valor) {
     temOperando = false;
-    return new Token(Token.Tipo.ERRO, valor);
+    return new Token(linha, Token.Tipo.ERRO, valor);
   }
 
   // lê um token
@@ -83,17 +83,20 @@ class Lexer {
       return null;
     }
 
+    // linha no código
+    int linha = codigo.linha();
+    
     // checa por operadores
     if (simbolo.containsKey(codigo.get())) {
       Token t = simbolo.get(codigo.get());
       codigo.avanca();
-      return criaToken(t);
+      return criaToken(linha, t);
     }
 
     // caso especial para '-': valor - valor
     if (temOperando && codigo.get() == '-') {
       codigo.avanca();
-      return criaToken(Token.Tipo.OPR_AR, "-");
+      return criaToken(linha, Token.Tipo.OPR_AR, "-");
     }
 
     StringBuilder buf = new StringBuilder();
@@ -107,9 +110,9 @@ class Lexer {
 
       String bufStr = buf.toString();
       if (keyword.containsKey(bufStr)) {
-        return keyword.get(bufStr);
+        return criaToken(linha, keyword.get(bufStr));
       }
-      return criaToken(Token.Tipo.ID, bufStr);
+      return criaToken(linha, Token.Tipo.ID, bufStr);
     }
 
     /***** se chegou aqui, é um número ou um caracter inválido *****/
@@ -120,7 +123,7 @@ class Lexer {
       Mensagem.debug("buf = '%s'\n", buf.toString());
       codigo.avanca();
       if (codigo.fim() || !Character.isDigit(codigo.get())) {
-        return criaToken(Token.Tipo.OPR_AR, "-");
+        return criaToken(linha, Token.Tipo.OPR_AR, "-");
       }
       buf.append('-');
     }
@@ -132,7 +135,7 @@ class Lexer {
           buf.append(codigo.get());
           codigo.avanca();
         }
-        return criaErro(buf.toString());
+        return criaErro(linha, buf.toString());
       }
 
       do {
@@ -149,7 +152,7 @@ class Lexer {
       real = true;
     }
 
-    return criaToken(Token.Tipo.NUM, buf.toString());
+    return criaToken(linha, Token.Tipo.NUM, buf.toString());
   }
 
   // lê todos os tokens do código
