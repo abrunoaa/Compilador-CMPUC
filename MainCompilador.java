@@ -8,20 +8,22 @@ import java.io.FileNotFoundException;
 
 class MainCompilador {
   public static void main(String[] args) {
-    Mensagem.printDebug = false;
+    Mensagem.printDebug = true;
+
     String fonte = "source.cmp";
     String dest = "source.scp";
+
+    Mensagem.debug("Iniciando compilador\n");
     try {
+      Compilador compilador = new Compilador(fonte);
+      String assembly = compilador.geraAssembly();
+
       System.setOut(new PrintStream(new FileOutputStream(dest)));
-    } catch(FileNotFoundException e) {
-      Mensagem.abort("Não foi possível abrir o arquivo '%s'.\n", dest);
-    }
-    try {
-      Mensagem.debug("Iniciando compilador\n");
-      new Compilador(fonte);
-      Mensagem.debug("Sucesso!\n");
+      System.out.printf(assembly);
     } catch (Exception e) {
       Mensagem.abort(Mensagem.getStackTrace(e));
     }
+
+    Mensagem.debug("Sucesso!\n");
   }
 }

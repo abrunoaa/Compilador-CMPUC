@@ -36,7 +36,7 @@ class Parser {
   public String geraAssembly() {
     programa();
     printWriter.flush();
-    return printWriter.toString();
+    return writer.toString();
   }
 
   private Token get(int k) {
@@ -44,6 +44,10 @@ class Parser {
       return Token.TOKEN_FINAL;
     }
     return tokens.get(k);
+  }
+
+  private void abort(int linha, String format, Object... out) {
+    Mensagem.abort("Linha %d: " + format + "Encontrado: '" + get(posicao).valor + "'\n", linha, out);
   }
 
   // escreve a instrução no arquivo
@@ -75,7 +79,7 @@ class Parser {
     if (posicao < tokens.size()) {
       instrucao();
       if (get(posicao).tipo != Token.Tipo.DELIM || !get(posicao).valor.equals(";")) {
-        Mensagem.abort("Espera-se um ';' após uma instrução\n");
+        abort(get(posicao - 1).linha, "Espera-se um ';' após instrução\n");
       }
       ++posicao;
       listaDeIntrucoes();
@@ -85,9 +89,9 @@ class Parser {
   // <instrucao> -> { <atribuicao> | instrucao <expressao> | leia ID }
   private void instrucao() {
     if (get(posicao).tipo != Token.Tipo.ID) {
-      Mensagem.abort("Espera-se um identificador no início da instrução\n");
+      abort(get(posicao).linha, "Espera-se um identificador no início da instrução\n");
     }
-    if (get(posicao).valor.equals("instrucao")) {
+    if (get(posicao).valor.equals("escreva")) {
       ++posicao;
       expressao();
       instrucao("pop r0");
@@ -97,7 +101,7 @@ class Parser {
       ++posicao;
       Token var = get(posicao);
       if (var.tipo != Token.Tipo.ID) {
-        Mensagem.abort("Espera-se um identificador após 'leia'\n");
+        abort(get(posicao - 1).linha, "Espera-se um identificador após 'leia'\n");
       }
       id();
       instrucao("read r0");
@@ -128,10 +132,10 @@ class Parser {
   private void atribuicao() {
     int posVar = posVariavel(get(posicao).valor);
     if (get(posicao).tipo != Token.Tipo.ID) {
-      Mensagem.abort("Espera-se um identificador no início da expressão\n");
+      abort(get(posicao).linha, "Espera-se um identificador no início da expressão\n");
     }
     if (get(posicao + 1).tipo != Token.Tipo.ATRIB) {
-      Mensagem.abort("Espera-se uma atribuição '=' após o identificador\n");
+      abort(get(posicao).linha, "Espera-se uma atribuição '=' após o identificador\n");
     }
     posicao += 2;
     expressao();
@@ -158,14 +162,14 @@ class Parser {
       ++posicao;
       expressao();
       if (get(posicao).tipo != Token.Tipo.DELIM || !get(posicao).valor.equals(")")) {
-        Mensagem.abort("Espera-se um ')' na expressão\n");
+        abort(get(posicao - 1).linha, "Espera-se um ')' após expressão\n");
       }
       ++posicao;
       resto3();
     }
     else{
       if (t.tipo != Token.Tipo.ID && t.tipo != Token.Tipo.NUM) {
-        Mensagem.abort("Espera-se uma expressão, número ou variável\n");
+        abort(get(posicao).linha, "Espera-se uma expressão, número ou variável\n");
       }
       id();
       resto3();
@@ -202,13 +206,13 @@ class Parser {
         ++posicao;
         expressao();
         if (!get(posicao).equals(")")) {
-          Mensagem.abort("Espera-se um ')' na expressão\n");
+          abort(get(posicao - 1).linha, "Espera-se um ')' após expressão\n");
         }
         ++posicao;
       }
       else {
         if (get(posicao).tipo != Token.Tipo.ID && get(posicao).tipo != Token.Tipo.NUM) {
-          Mensagem.abort("Espera-se uma expressão, número ou variável após o operador '^'\n");
+          abort(get(posicao - 1).linha, "Espera-se uma expressão, número ou variável após o operador '^'\n");
         }
         id();
       }

@@ -102,7 +102,7 @@ public class MaquinaVirtual {
   }
 
   long read() {
-    Mensagem.print(" > ");
+    Mensagem.print(" >> ");
     try {
       return input.nextLong();
     } catch (Exception e) {
