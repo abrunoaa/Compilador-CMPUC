@@ -1,0 +1,16 @@
+x = 2;
+y = 3;
+
+escreva x + y;
+escreva x - y;
+escreva x * y;
+escreva x / y;
+escreva x % y;
+escreva x ^ y;
+escreva (x + 1) ^ 2;
+
+x = 3;
+y = 4;
+escreva x;
+escreva y;
+escreva ((y - 2) ^ 2 + x - 17) ^ 2 * (x - 1) ^ 2 ^ 2;
