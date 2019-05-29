@@ -1,7 +1,7 @@
 EXE=compilador
 FLEX=flex
 BISON=bison -d
-CPP=g++ -o $(EXE)
+CPP=g++ -std=c++11 -o $(EXE)
 
 Compilador: lex.yy.c parser.tab.c parser.tab.h
 	$(CPP) lex.yy.c parser.tab.c
