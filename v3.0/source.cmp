@@ -1,0 +1,4 @@
+main{
+  leia x;
+  escreva x ^ 2 / 49;
+}
